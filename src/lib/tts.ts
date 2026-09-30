@@ -14,30 +14,15 @@
  */
 
 import { Capacitor } from '@capacitor/core';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
 
-type NativeTTS = {
-  speak(options: {
-    text: string;
-    lang?: string;
-    rate?: number;
-    pitch?: number;
-    volume?: number;
-    category?: string;
-  }): Promise<void>;
-  stop(): Promise<void>;
-  setLanguage(options: { lang: string }): Promise<{ name: string }>;
-  supportedVoices(): Promise<{ id: string; name: string; lang: string }[]>;
-};
+const isNative = Capacitor.isNativePlatform();
 
-let nativeTTS: NativeTTS | null = null;
-try {
-  // Registered only when running inside the native app (not the web build).
-  if (Capacitor.isNativePlatform()) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    nativeTTS = (Capacitor as unknown as { plugins: { TextToSpeech: NativeTTS } }).plugins.TextToSpeech;
-  }
-} catch {
-  nativeTTS = null;
+// Which engine actually produced the last utterance (for the Settings readout).
+export type VoiceEngine = 'native' | 'network' | 'synth' | 'none';
+let lastEngine: VoiceEngine = 'none';
+export function lastVoiceEngine(): VoiceEngine {
+  return lastEngine;
 }
 
 // ─── Text shaping ─────────────────────────────────────────────────────────────
@@ -86,30 +71,29 @@ function chunkText(text: string, max = 180): string[] {
 
 // ─── Tier 1: native Android/iOS TTS ───────────────────────────────────────────
 
-let nativeReady: boolean | null = null;
-
 async function nativeSpeak(text: string): Promise<void> {
-  if (!nativeTTS) throw new Error('native tts unavailable');
   const clean = forSpeech(text);
   if (!clean) throw new Error('empty text');
 
-  if (nativeReady === null) {
-    try {
-      const voices = await nativeTTS.supportedVoices();
-      // Prefer a British voice if the engine offers one.
-      const gb = voices.find((v) => /en[-_]GB/i.test(v.lang) && !/female|kate|serena/i.test(v.name));
-      nativeReady = true;
-      if (gb) await nativeTTS.setLanguage({ lang: gb.lang });
-    } catch {
-      nativeReady = true; // engine exists even if voice enumeration fails
-    }
+  // Prefer a British voice if the engine offers one.
+  let lang = 'en-GB';
+  try {
+    const voices = (await TextToSpeech.getSupportedVoices()).voices;
+    const gb = voices.find((v: { lang: string; name: string }) => /en[-_]GB/i.test(v.lang) && !/female|kate|serena/i.test(v.name));
+    const anyEn = voices.find((v: { lang: string }) => /^en/i.test(v.lang));
+    if (gb) lang = gb.lang;
+    else if (anyEn) lang = anyEn.lang;
+  } catch {
+    // voice enumeration optional — default lang stands
   }
-  await nativeTTS.speak({
+
+  await TextToSpeech.speak({
     text: clean,
-    lang: 'en-GB',
+    lang,
     rate: 0.94,
     pitch: 0.85,
     volume: 1.0,
+    category: 'ambient' as const,
   });
 }
 
@@ -229,17 +213,35 @@ function synthSpeak(text: string): void {
 /** Speaks a reply: native TTS → network voice → local synthesis, auto-falling. */
 export function speakReply(text: string): void {
   // Tier 1 — native engine (the reliable path inside the Android app).
-  if (nativeTTS) {
-    nativeSpeak(text).catch(() => {
-      networkSpeak(text, () => {}, () => synthSpeak(text));
-    });
+  if (isNative) {
+    nativeSpeak(text)
+      .then(() => {
+        lastEngine = 'native';
+      })
+      .catch(() => {
+        networkSpeak(
+          text,
+          () => {
+            lastEngine = 'network';
+          },
+          () => {
+            lastEngine = 'synth';
+            synthSpeak(text);
+          },
+        );
+      });
     return;
   }
   // Tier 2 — network voice in browsers.
   networkSpeak(
     text,
-    () => {},
-    () => synthSpeak(text),
+    () => {
+      lastEngine = 'network';
+    },
+    () => {
+      lastEngine = 'synth';
+      synthSpeak(text);
+    },
   );
 }
 
@@ -251,8 +253,8 @@ export function stopSpeaking(): void {
     currentAudio.src = '';
     currentAudio = null;
   }
-  if (nativeTTS) {
-    nativeTTS.stop().catch(() => {});
+  if (isNative) {
+    TextToSpeech.stop().catch(() => {});
   }
   if (ttsSupported()) window.speechSynthesis.cancel();
 }

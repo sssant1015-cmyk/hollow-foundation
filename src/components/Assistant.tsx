@@ -4,7 +4,7 @@ import { AIError, type ChatMessage } from '../ai/types';
 import { MODELS, getModel, chatComplete } from '../ai/providers';
 import { buildMessages } from '../ai/assistant';
 import { cx } from './ui';
-import { speakReply, stopSpeaking } from '../lib/tts';
+import { speakReply, stopSpeaking, lastVoiceEngine } from '../lib/tts';
 
 interface UIMessage extends ChatMessage {
   id: string;
@@ -25,6 +25,7 @@ export function Assistant({ open, onClose }: { open: boolean; onClose: () => voi
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [engine, setEngine] = useState<string>('—');
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const model = getModel(modelId);
@@ -241,9 +242,19 @@ export function Assistant({ open, onClose }: { open: boolean; onClose: () => voi
               </button>
             )}
           </div>
-          <p className="mt-1.5 text-[10px] text-slate-600">
-            Free models · your data goes only to the chosen provider · Enter to send
-          </p>
+          <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-600">
+            <span>Free models · Enter to send</span>
+            <button
+              className="text-accent hover:underline"
+              onClick={() => {
+                setEngine('speaking…');
+                speakReply('All systems are operational, sir.');
+                setTimeout(() => setEngine(lastVoiceEngine()), 2500);
+              }}
+            >
+              Test voice{engine !== '—' ? ` · engine: ${engine}` : ''}
+            </button>
+          </div>
         </footer>
       </aside>
     </>
