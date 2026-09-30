@@ -1,11 +1,93 @@
 /**
- * JARVIS voice engine — Web Speech API wrapper.
+ * JARVIS voice engine — dual-stack text-to-speech.
  *
- * Goal: a calm, refined, slightly deep British male voice (movie JARVIS).
- * No network, no keys, no deps — speaks through the OS/browser TTS engine.
- * On Android this resolves to "Google UK English Male" when installed
- * (it ships with Google TTS), falling back through a preference ladder.
+ * Engine 1 (primary, all platforms incl. Android WebView): network voice via
+ * Google Translate TTS (tl=en-gb) — a smooth British male that needs no
+ * system TTS voices. Played through Audio() elements, which are exempt from
+ * CORS for playback. Text is chunked (~180 chars) and queued sequentially.
+ *
+ * Engine 2 (fallback): Web Speech API with the JARVIS voice ladder
+ * (Google UK English Male → Daniel → en-GB males), used automatically if
+ * the network engine fails, and on desktop browsers while offline.
  */
+
+// ─── Text shaping ─────────────────────────────────────────────────────────────
+
+/** Strips markdown noise and shapes the text for a measured spoken cadence. */
+function forSpeech(text: string): string {
+  return text
+    .replace(/[*_#`>]+/g, '')
+    .replace(/^\s*[-•*]\s+/gm, '')
+    .replace(/\b(\d{1,2})\/(\d{1,2})\b/g, '$1 of $2')
+    .replace(/\s*\n\s*/g, '. ')
+    .replace(/\.{2,}/g, '.')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 900);
+}
+
+/** Splits text into <=max-char chunks at sentence (then word) boundaries. */
+function chunkText(text: string, max = 180): string[] {
+  const chunks: string[] = [];
+  let cur = '';
+  const pushWordwise = (s: string) => {
+    let piece = '';
+    for (const w of s.split(/\s+/)) {
+      if (!piece) piece = w;
+      else if (piece.length + 1 + w.length <= max) piece += ' ' + w;
+      else {
+        chunks.push(piece);
+        piece = w;
+      }
+    }
+    return piece;
+  };
+  for (const sentence of text.split(/(?<=[.!?])\s+/)) {
+    if (!sentence) continue;
+    if (cur.length + 1 + sentence.length <= max) {
+      cur = cur ? cur + ' ' + sentence : sentence;
+    } else {
+      if (cur) chunks.push(cur);
+      cur = sentence.length <= max ? sentence : pushWordwise(sentence);
+    }
+  }
+  if (cur) chunks.push(cur);
+  return chunks.filter(Boolean);
+}
+
+// ─── Engine 1: network voice (Google Translate TTS, en-GB) ────────────────────
+
+let currentAudio: HTMLAudioElement | null = null;
+let networkStopped = false;
+
+function networkSpeak(text: string, onDone: () => void, onFail: (reason: unknown) => void): void {
+  networkStopped = false;
+  const chunks = chunkText(forSpeech(text));
+  if (chunks.length === 0) {
+    onDone();
+    return;
+  }
+  let i = 0;
+  const playNext = () => {
+    if (networkStopped || i >= chunks.length) {
+      onDone();
+      return;
+    }
+    const q = encodeURIComponent(chunks[i++]);
+    const audio = new Audio(`https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-gb&q=${q}`);
+    currentAudio = audio;
+    audio.onended = playNext;
+    audio.onerror = () => {
+      if (!networkStopped) onFail('network voice unavailable');
+    };
+    audio.play().catch((e) => {
+      if (!networkStopped) onFail(e);
+    });
+  };
+  playNext();
+}
+
+// ─── Engine 2: Web Speech API fallback with JARVIS voice ladder ──────────────
 
 let cachedVoice: SpeechSynthesisVoice | null = null;
 
@@ -13,7 +95,6 @@ export function ttsSupported(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window;
 }
 
-// Kick voice-list loading early (Chrome populates getVoices() asynchronously).
 if (ttsSupported()) {
   try {
     window.speechSynthesis.getVoices();
@@ -71,40 +152,38 @@ export function pickJARVISVoice(): SpeechSynthesisVoice | null {
   );
 }
 
-/** Strips markdown noise and shapes the text for a measured spoken cadence. */
-function forSpeech(text: string): string {
-  return text
-    .replace(/[*_#`>]+/g, '')
-    .replace(/^\s*[-•*]\s+/gm, '')
-    .replace(/\b(\d{1,2})\/(\d{1,2})\b/g, '$1 of $2')
-    .replace(/\s*\n\s*/g, '. ')
-    .replace(/\.{2,}/g, '.')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 700);
-}
-
-export function makeUtterance(text: string): SpeechSynthesisUtterance | null {
-  if (!ttsSupported()) return null;
+function synthSpeak(text: string): void {
+  if (!ttsSupported()) return;
   const u = new SpeechSynthesisUtterance(forSpeech(text));
-
   if (!cachedVoice) cachedVoice = pickJARVISVoice();
   if (cachedVoice) u.voice = cachedVoice;
-  else u.lang = 'en-GB'; // at least hint the accent if no voice list yet
-
+  else u.lang = 'en-GB';
   // JARVIS delivery: unhurried, composed, a register below normal.
   u.rate = 0.92;
   u.pitch = 0.7;
   u.volume = 1;
-  return u;
-}
-
-export function speak(utterance: SpeechSynthesisUtterance | null): void {
-  if (!utterance || !ttsSupported()) return;
   window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
+  window.speechSynthesis.speak(u);
 }
 
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+/** Speaks a reply: network voice first, local synthesis as automatic fallback. */
+export function speakReply(text: string): void {
+  networkSpeak(
+    text,
+    () => {},
+    () => synthSpeak(text),
+  );
+}
+
+/** Stops any spoken audio (both engines). */
 export function stopSpeaking(): void {
+  networkStopped = true;
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.src = '';
+    currentAudio = null;
+  }
   if (ttsSupported()) window.speechSynthesis.cancel();
 }
