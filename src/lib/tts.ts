@@ -1,15 +1,44 @@
 /**
- * JARVIS voice engine — dual-stack text-to-speech.
+ * JARVIS voice engine — three-tier text-to-speech.
  *
- * Engine 1 (primary, all platforms incl. Android WebView): network voice via
- * Google Translate TTS (tl=en-gb) — a smooth British male that needs no
- * system TTS voices. Played through Audio() elements, which are exempt from
- * CORS for playback. Text is chunked (~180 chars) and queued sequentially.
+ * Tier 1 (native, Android app): @capacitor-community/text-to-speech drives the
+ * phone's actual TTS engine (Google TTS) directly — real en-GB voices, works
+ * offline, immune to WebView speechSynthesis bugs. This is the reliable path.
  *
- * Engine 2 (fallback): Web Speech API with the JARVIS voice ladder
- * (Google UK English Male → Daniel → en-GB males), used automatically if
- * the network engine fails, and on desktop browsers while offline.
+ * Tier 2 (network): Google Translate TTS (tl=en-gb) MP3 chunks played through
+ * Audio() elements — smooth British male in any browser, no system voices needed.
+ *
+ * Tier 3 (fallback): Web Speech API with a British-male voice ladder.
+ *
+ * speakReply() tries tiers in order and automatically falls through on failure.
  */
+
+import { Capacitor } from '@capacitor/core';
+
+type NativeTTS = {
+  speak(options: {
+    text: string;
+    lang?: string;
+    rate?: number;
+    pitch?: number;
+    volume?: number;
+    category?: string;
+  }): Promise<void>;
+  stop(): Promise<void>;
+  setLanguage(options: { lang: string }): Promise<{ name: string }>;
+  supportedVoices(): Promise<{ id: string; name: string; lang: string }[]>;
+};
+
+let nativeTTS: NativeTTS | null = null;
+try {
+  // Registered only when running inside the native app (not the web build).
+  if (Capacitor.isNativePlatform()) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    nativeTTS = (Capacitor as unknown as { plugins: { TextToSpeech: NativeTTS } }).plugins.TextToSpeech;
+  }
+} catch {
+  nativeTTS = null;
+}
 
 // ─── Text shaping ─────────────────────────────────────────────────────────────
 
@@ -55,7 +84,36 @@ function chunkText(text: string, max = 180): string[] {
   return chunks.filter(Boolean);
 }
 
-// ─── Engine 1: network voice (Google Translate TTS, en-GB) ────────────────────
+// ─── Tier 1: native Android/iOS TTS ───────────────────────────────────────────
+
+let nativeReady: boolean | null = null;
+
+async function nativeSpeak(text: string): Promise<void> {
+  if (!nativeTTS) throw new Error('native tts unavailable');
+  const clean = forSpeech(text);
+  if (!clean) throw new Error('empty text');
+
+  if (nativeReady === null) {
+    try {
+      const voices = await nativeTTS.supportedVoices();
+      // Prefer a British voice if the engine offers one.
+      const gb = voices.find((v) => /en[-_]GB/i.test(v.lang) && !/female|kate|serena/i.test(v.name));
+      nativeReady = true;
+      if (gb) await nativeTTS.setLanguage({ lang: gb.lang });
+    } catch {
+      nativeReady = true; // engine exists even if voice enumeration fails
+    }
+  }
+  await nativeTTS.speak({
+    text: clean,
+    lang: 'en-GB',
+    rate: 0.94,
+    pitch: 0.85,
+    volume: 1.0,
+  });
+}
+
+// ─── Tier 2: network voice (Google Translate TTS, en-GB) ──────────────────────
 
 let currentAudio: HTMLAudioElement | null = null;
 let networkStopped = false;
@@ -87,7 +145,7 @@ function networkSpeak(text: string, onDone: () => void, onFail: (reason: unknown
   playNext();
 }
 
-// ─── Engine 2: Web Speech API fallback with JARVIS voice ladder ──────────────
+// ─── Tier 3: Web Speech API fallback with JARVIS voice ladder ────────────────
 
 let cachedVoice: SpeechSynthesisVoice | null = null;
 
@@ -168,8 +226,16 @@ function synthSpeak(text: string): void {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-/** Speaks a reply: network voice first, local synthesis as automatic fallback. */
+/** Speaks a reply: native TTS → network voice → local synthesis, auto-falling. */
 export function speakReply(text: string): void {
+  // Tier 1 — native engine (the reliable path inside the Android app).
+  if (nativeTTS) {
+    nativeSpeak(text).catch(() => {
+      networkSpeak(text, () => {}, () => synthSpeak(text));
+    });
+    return;
+  }
+  // Tier 2 — network voice in browsers.
   networkSpeak(
     text,
     () => {},
@@ -177,13 +243,16 @@ export function speakReply(text: string): void {
   );
 }
 
-/** Stops any spoken audio (both engines). */
+/** Stops any spoken audio (all tiers). */
 export function stopSpeaking(): void {
   networkStopped = true;
   if (currentAudio) {
     currentAudio.pause();
     currentAudio.src = '';
     currentAudio = null;
+  }
+  if (nativeTTS) {
+    nativeTTS.stop().catch(() => {});
   }
   if (ttsSupported()) window.speechSynthesis.cancel();
 }

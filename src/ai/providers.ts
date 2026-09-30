@@ -111,7 +111,7 @@ export async function chatComplete(modelId: string, apiKey: string | undefined, 
       body: JSON.stringify({
         model: ep.model,
         messages,
-        temperature: 0.4,
+        temperature: 0.65,
         max_tokens: 700,
       }),
       signal,
