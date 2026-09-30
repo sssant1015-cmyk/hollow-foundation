@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS: AppState['settings'] = {
   notifyDailyReview: true,
   notifyWeeklyReview: true,
   aiModel: 'llm7-mistral',
+  aiVoiceOn: false,
   aiGroqKey: '',
   aiGeminiKey: '',
   aiOpenRouterKey: '',
@@ -38,7 +39,7 @@ export function seedProjects(): Project[] {
       ...base,
       id: 'p-foundation',
       name: 'Hollow Foundation',
-      description: 'Personal operating system and command dashboard for the Winter Arc 2026.',
+      description: 'Personal operating system and command dashboard for the Command Arc 2026.',
       status: 'active',
       priority: 'critical',
       startDate: todayKey(),
@@ -46,7 +47,7 @@ export function seedProjects(): Project[] {
       progress: 5,
       currentMilestone: 'Phase One — v1 usable daily',
       nextAction: 'Daily use: plan tasks, log execution, complete reviews',
-      notes: 'Phase One scope: tasks, projects, winter arc, money, fitness, learning, habits, reviews, calendar, search.',
+      notes: 'Phase One scope: tasks, projects, command arc, money, fitness, learning, habits, reviews, calendar, search.',
     },
   ];
 }
@@ -54,6 +55,7 @@ export function seedProjects(): Project[] {
 export function seedHabits(): Habit[] {
   const now = nowISO();
   const names = [
+    'Save the seed',
     'Complete daily plan',
     'Complete important task',
     'Exercise',
@@ -80,6 +82,7 @@ export function emptyState(): AppState {
     learning: [],
     habits: seedHabits(),
     habitLogs: [],
+    seedLogs: [],
     dailyReviews: [],
     weeklyReviews: [],
     notes: [],

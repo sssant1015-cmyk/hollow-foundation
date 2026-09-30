@@ -1,9 +1,9 @@
 import { useStore } from '../store/store';
 import { Badge, Bar, PageHeader, Panel, cx } from '../components/ui';
 import { fmtDate, todayKey, addDays, daysBetween } from '../lib/dates';
-import { DEFAULT_PHASES, getArcInfo, phaseOfDay } from '../lib/winterArc';
+import { DEFAULT_PHASES, getArcInfo, phaseOfDay } from '../lib/commandArc';
 
-export function WinterArcPage() {
+export function CommandArcPage() {
   const state = useStore((s) => s);
   const today = todayKey();
   const arc = getArcInfo(DEFAULT_PHASES);
@@ -21,7 +21,7 @@ export function WinterArcPage() {
   return (
     <div>
       <PageHeader
-        title="Winter Arc"
+        title="Command Arc"
         sub={`${fmtDate(DEFAULT_PHASES[0].start)} → ${fmtDate(DEFAULT_PHASES[DEFAULT_PHASES.length - 1].end)}`}
         right={
           <Badge className={arc.started && !arc.finished ? 'border-accent/40 bg-accent/10 text-accent' : ''}>

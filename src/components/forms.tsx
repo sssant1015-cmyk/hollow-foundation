@@ -474,3 +474,39 @@ export function DailyReviewForm({ date, onDone }: { date: string; onDone: () => 
     </FormShell>
   );
 }
+
+export function SeedForm({ onDone }: { onDone: () => void }) {
+  const state = useStore((s) => s);
+  const today = todayKey();
+  const logged = state.seedLogs.some((l) => l.date === today);
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!logged) actions.toggleSeed(today);
+    onDone();
+  };
+
+  return (
+    <form onSubmit={submit}>
+      <div className="space-y-3">
+        <p className="text-sm text-slate-300">
+          Holding the seed today? Logging means a clean day — no relapse, full discipline.
+        </p>
+        <div
+          className={cx(
+            'rounded-lg border px-4 py-3 text-sm',
+            logged ? 'border-good/40 bg-good/10 text-good' : 'border-hollow-line bg-hollow-panel2 text-slate-300',
+          )}
+        >
+          {fmtDate(today)} · {logged ? 'Already logged as held.' : 'Not logged yet.'}
+        </div>
+      </div>
+      <div className="mt-4 flex justify-end gap-2">
+        <button type="button" className="btn" onClick={onDone}>Cancel</button>
+        <button type="submit" className="btn btn-primary" disabled={logged}>
+          {logged ? 'Logged' : 'Log held today'}
+        </button>
+      </div>
+    </form>
+  );
+}

@@ -33,6 +33,13 @@ function load(): AppState {
       savings: { ...base.savings, ...parsed.savings },
       // Purge the pre-v0.1.1 placeholder projects from already-saved state.
       projects: (parsed.projects ?? []).filter((p) => !PLACEHOLDER_PROJECT_IDS.has(p.id)),
+      seedLogs: parsed.seedLogs ?? [],
+      // Retire the phase-named task categories; map saved tasks onto valid ones.
+      tasks: (parsed.tasks ?? []).map((t) =>
+        (t.category as string) === 'nix' || (t.category as string) === 'rafael'
+          ? { ...t, category: 'personal' as const }
+          : t,
+      ),
     };
   } catch {
     return emptyState();
@@ -261,6 +268,13 @@ export const actions = {
       ? state.habitLogs.filter((l) => !(l.habitId === habitId && l.date === date))
       : [...state.habitLogs, { id: uid(), habitId, date }];
     set({ ...state, habitLogs });
+  },
+
+  // Save Seed (daily discipline tracker)
+  toggleSeed(date: string) {
+    const exists = state.seedLogs.some((l) => l.date === date);
+    const seedLogs = exists ? state.seedLogs.filter((l) => l.date !== date) : [...state.seedLogs, { id: uid(), date }];
+    set({ ...state, seedLogs });
   },
 
   // Reviews

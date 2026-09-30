@@ -4,7 +4,7 @@ import { useModal } from '../components/ModalHost';
 import { CATEGORY_LABEL, PRIORITY_CLASS, PRIORITY_LABEL, fmtHours } from '../lib/format';
 import { fmtDate, fmtLong, todayKey } from '../lib/dates';
 import { fmtCents } from '../lib/money';
-import { DEFAULT_PHASES, getArcInfo } from '../lib/winterArc';
+import { DEFAULT_PHASES, getArcInfo } from '../lib/commandArc';
 import { getProgress, getQuickStats, todaysTasks, weekRange } from '../lib/stats';
 import { navigate } from '../lib/router';
 import type { Task } from '../types';
@@ -68,7 +68,7 @@ export function Dashboard() {
           </p>
         </div>
         <Badge className="border-accent/40 bg-accent/10 text-accent">
-          {arc.finished ? 'Arc complete' : arc.started ? `Winter Arc · Day ${arc.currentDay}/${arc.totalDays}` : `Arc starts ${fmtDate(DEFAULT_PHASES[0].start)}`}
+          {arc.finished ? 'Arc complete' : arc.started ? `Command Arc · Day ${arc.currentDay}/${arc.totalDays}` : `Arc starts ${fmtDate(DEFAULT_PHASES[0].start)}`}
         </Badge>
       </header>
 
@@ -76,15 +76,15 @@ export function Dashboard() {
       <Panel className="overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-4 p-4">
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Winter Arc Progress</div>
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Command Arc Progress</div>
             <div className="mt-1 flex items-baseline gap-3">
-              <span className="text-4xl font-semibold tabular-nums text-accent">{progress.total}%</span>
+              <span className="text-3xl font-semibold tabular-nums text-accent sm:text-4xl">{progress.total}%</span>
               <span className="text-sm text-slate-500">
                 Phase {arc.currentPhase?.n ?? '—'} · {arc.currentPhase?.name ?? (arc.finished ? 'Complete' : 'Not started')}
               </span>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-6 text-sm">
+          <div className="grid grid-cols-3 gap-3 text-sm sm:gap-6">
             <div>
               <div className="text-[10px] uppercase tracking-widest text-slate-500">Day</div>
               <div className="mt-0.5 font-semibold tabular-nums text-white">{arc.started ? `${arc.currentDay}/${arc.totalDays}` : '—'}</div>
@@ -105,7 +105,7 @@ export function Dashboard() {
             {arc.started ? `Days completed: ${arc.daysCompleted}` : `Starts ${fmtDate(DEFAULT_PHASES[0].start)}`}
             {currentProject && <> · Current project: <button className="text-accent hover:underline" onClick={() => navigate('projects')}>{currentProject.name}</button></>}
           </span>
-          <button className="text-accent hover:underline" onClick={() => navigate('arc')}>Winter Arc →</button>
+          <button className="text-accent hover:underline" onClick={() => navigate('arc')}>Command Arc →</button>
         </div>
       </Panel>
 
@@ -154,6 +154,7 @@ export function Dashboard() {
             {quick('learning', 'Learning')}
             {quick('project', 'Project')}
             {quick('daily-review', 'Daily Review')}
+            {quick('seed', 'Save Seed')}
           </div>
           <div className="border-t border-hollow-line p-3">
             <button className="btn w-full" onClick={() => open({ kind: 'weekly-review' })}>

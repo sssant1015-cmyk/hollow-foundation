@@ -4,3 +4,4 @@ vite-dev.log
 *.local
 .DS_Store
 .freebuff/
+tsconfig.app.tsbuildinfo

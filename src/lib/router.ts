@@ -10,11 +10,12 @@ export type Route =
   | 'learning'
   | 'habits'
   | 'reviews'
+  | 'seed'
   | 'calendar'
   | 'notes'
   | 'settings';
 
-const ROUTES: Route[] = ['home', 'tasks', 'projects', 'arc', 'money', 'fitness', 'learning', 'habits', 'reviews', 'calendar', 'notes', 'settings'];
+const ROUTES: Route[] = ['home', 'tasks', 'projects', 'arc', 'money', 'fitness', 'learning', 'habits', 'reviews', 'seed', 'calendar', 'notes', 'settings'];
 
 function parseHash(): Route {
   const h = location.hash.replace(/^#\/?/, '');

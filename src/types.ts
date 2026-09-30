@@ -12,9 +12,6 @@ export type TaskCategory =
   | 'money'
   | 'health'
   | 'learning'
-  | 'hollow_tech'
-  | 'nix'
-  | 'rafael'
   | 'personal';
 
 export interface Task {
@@ -177,6 +174,13 @@ export interface WeeklyReview {
   createdAt: ISODateTime;
 }
 
+// ─── Save Seed (daily discipline tracker) ────────────────────────────────────
+
+export interface SeedLog {
+  id: ID;
+  date: ISODate;
+}
+
 // ─── Winter Arc ───────────────────────────────────────────────────────────────
 
 export interface ArcPhase {
@@ -198,6 +202,7 @@ export interface Settings {
   notifyDailyReview: boolean;
   notifyWeeklyReview: boolean;
   aiModel: string;
+  aiVoiceOn: boolean;
   aiGroqKey: string;
   aiGeminiKey: string;
   aiOpenRouterKey: string;
@@ -224,6 +229,7 @@ export interface AppState {
   learning: LearningSession[];
   habits: Habit[];
   habitLogs: HabitLog[];
+  seedLogs: SeedLog[];
   dailyReviews: DailyReview[];
   weeklyReviews: WeeklyReview[];
   notes: Notes[];

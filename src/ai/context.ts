@@ -2,7 +2,7 @@ import type { AppState } from '../types';
 import { EXPENSE_CATEGORY_LABEL, fmtHours } from '../lib/format';
 import { fmtDate, todayKey } from '../lib/dates';
 import { fmtCents } from '../lib/money';
-import { DEFAULT_PHASES, getArcInfo } from '../lib/winterArc';
+import { DEFAULT_PHASES, getArcInfo } from '../lib/commandArc';
 import { getProgress, weekRange } from '../lib/stats';
 
 /** Compact, token-efficient snapshot of the user's current state. */

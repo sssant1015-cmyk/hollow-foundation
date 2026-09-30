@@ -8,12 +8,13 @@ import { Assistant } from './components/Assistant';
 import { Dashboard } from './pages/Dashboard';
 import { Tasks } from './pages/Tasks';
 import { Projects } from './pages/Projects';
-import { WinterArcPage } from './pages/WinterArc';
+import { CommandArcPage } from './pages/CommandArc';
 import { MoneyPage } from './pages/Money';
 import { FitnessPage } from './pages/Fitness';
 import { LearningPage } from './pages/Learning';
 import { HabitsPage } from './pages/Habits';
 import { ReviewsPage } from './pages/Reviews';
+import { SaveSeedPage } from './pages/SaveSeed';
 import { CalendarPage } from './pages/Calendar';
 import { NotesPage } from './pages/Notes';
 import { SettingsPage } from './pages/Settings';
@@ -23,12 +24,13 @@ const NAV: { route: Route; label: string; icon: string }[] = [
   { route: 'home', label: 'Dashboard', icon: '◈' },
   { route: 'tasks', label: 'Tasks', icon: '☑' },
   { route: 'projects', label: 'Projects', icon: '▤' },
-  { route: 'arc', label: 'Winter Arc', icon: '❄' },
+  { route: 'arc', label: 'Command Arc', icon: '❄' },
   { route: 'money', label: 'Money', icon: '$' },
   { route: 'fitness', label: 'Fitness', icon: '◉' },
   { route: 'learning', label: 'Learning', icon: '▣' },
   { route: 'habits', label: 'Habits', icon: '⌗' },
   { route: 'reviews', label: 'Reviews', icon: '✎' },
+  { route: 'seed', label: 'Save Seed', icon: '✦' },
   { route: 'calendar', label: 'Calendar', icon: '▦' },
   { route: 'notes', label: 'Notes', icon: '≡' },
   { route: 'settings', label: 'Settings', icon: '⚙' },
@@ -125,12 +127,13 @@ export default function App() {
       case 'home': return <Dashboard />;
       case 'tasks': return <Tasks />;
       case 'projects': return <Projects />;
-      case 'arc': return <WinterArcPage />;
+      case 'arc': return <CommandArcPage />;
       case 'money': return <MoneyPage />;
       case 'fitness': return <FitnessPage />;
       case 'learning': return <LearningPage />;
       case 'habits': return <HabitsPage />;
       case 'reviews': return <ReviewsPage />;
+      case 'seed': return <SaveSeedPage />;
       case 'calendar': return <CalendarPage />;
       case 'notes': return <NotesPage />;
       case 'settings': return <SettingsPage />;

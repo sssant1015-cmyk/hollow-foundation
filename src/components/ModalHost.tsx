@@ -12,6 +12,7 @@ import {
   TaskForm,
   WeightForm,
   WorkoutForm,
+  SeedForm,
 } from './forms';
 import { WeeklyReviewForm } from './WeeklyReviewForm';
 import type { Task } from '../types';
@@ -28,7 +29,8 @@ export type ModalKind =
   | 'daily-review'
   | 'weekly-review'
   | 'note'
-  | 'habit';
+  | 'habit'
+  | 'seed';
 
 export interface ModalRequest {
   kind: ModalKind;
@@ -64,6 +66,7 @@ const TITLES: Record<ModalKind, string> = {
   'weekly-review': 'Weekly Review',
   note: 'Note',
   habit: 'Habit',
+  seed: 'Save Seed',
 };
 
 export function ModalHost({ children }: { children: ReactNode }) {
@@ -86,6 +89,7 @@ export function ModalHost({ children }: { children: ReactNode }) {
       case 'weekly-review': return <WeeklyReviewForm weekStart={req.weekStart} onDone={onDone} />;
       case 'note': return <NoteForm noteId={req.noteId} onDone={onDone} />;
       case 'habit': return <HabitForm habitId={req.habitId} onDone={onDone} />;
+      case 'seed': return <SeedForm onDone={onDone} />;
     }
   };
 

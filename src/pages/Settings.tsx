@@ -73,7 +73,7 @@ export function SettingsPage() {
           </div>
         </Panel>
 
-        <Panel title="Winter Arc dates">
+        <Panel title="Command Arc dates">
           <div className="space-y-3 p-4">
             <div className="grid grid-cols-2 gap-3">
               <Field label="Start date">
@@ -95,7 +95,7 @@ export function SettingsPage() {
             </div>
             <p className="text-xs text-slate-500">
               Default: {fmtDate(DEFAULT_SETTINGS.arcStart)} → {fmtDate(DEFAULT_SETTINGS.arcEnd)} (92 days). Phase boundaries on the
-              Winter Arc page follow the standard schedule; these dates control the overall countdown.
+              Command Arc page follow the standard schedule; these dates control the overall countdown.
             </p>
             <Field label="Notifications">
               <label className="flex items-center gap-2 text-sm text-slate-300">

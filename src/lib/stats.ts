@@ -1,7 +1,7 @@
 import type { AppState, Task } from '../types';
 import { addDays, daysBetween, startOfWeek, todayKey } from './dates';
 import { pct } from './format';
-import { DEFAULT_PHASES, getArcInfo } from './winterArc';
+import { DEFAULT_PHASES, getArcInfo } from './commandArc';
 
 /** Tasks due today or earlier that are not done (overdue included). */
 export function todaysTasks(s: AppState): Task[] {

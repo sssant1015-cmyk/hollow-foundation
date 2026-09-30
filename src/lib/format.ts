@@ -27,9 +27,6 @@ export const CATEGORY_LABEL: Record<TaskCategory, string> = {
   money: 'Money',
   health: 'Health',
   learning: 'Learning',
-  hollow_tech: 'Hollow Tech',
-  nix: 'Nix',
-  rafael: 'Rafael',
   personal: 'Personal',
 };
 

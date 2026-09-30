@@ -2,7 +2,7 @@ import type { AppState } from '../types';
 import type { ChatMessage } from './types';
 import { buildContext } from './context';
 
-export const SYSTEM_PROMPT = `You are JARVIS, the built-in assistant of Hollow Foundation — a personal command system for the Winter Arc (1 Oct – 31 Dec 2026).
+export const SYSTEM_PROMPT = `You are JARVIS, the built-in assistant of Hollow Foundation — a personal command system for the Command Arc (1 Oct – 31 Dec 2026).
 
 You receive a live data snapshot of the operator's tasks, projects, money, fitness, learning, habits and reviews. Use it — never invent data. If something isn't in the snapshot, say what you don't know.
 

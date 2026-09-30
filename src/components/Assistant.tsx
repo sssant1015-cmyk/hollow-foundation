@@ -4,6 +4,7 @@ import { AIError, type ChatMessage } from '../ai/types';
 import { MODELS, getModel, chatComplete } from '../ai/providers';
 import { buildMessages } from '../ai/assistant';
 import { cx } from './ui';
+import { makeUtterance, speak as speakText, stopSpeaking, ttsSupported } from '../lib/tts';
 
 interface UIMessage extends ChatMessage {
   id: string;
@@ -27,10 +28,21 @@ export function Assistant({ open, onClose }: { open: boolean; onClose: () => voi
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const model = getModel(modelId);
+  const voiceOn = state.settings.aiVoiceOn;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, busy]);
+
+  const speak = (text: string) => {
+    if (voiceOn && ttsSupported() && !text.startsWith('(')) speakText(makeUtterance(text));
+  };
+
+  useEffect(() => {
+    if (voiceOn && ttsSupported()) speak(WELCOME.content);
+    return () => stopSpeaking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -62,6 +74,7 @@ export function Assistant({ open, onClose }: { open: boolean; onClose: () => voi
         ctrl.signal,
       );
       setMessages((m) => [...m, { id: `a${Date.now()}`, role: 'assistant', content: result.text }]);
+      speak(result.text);
     } catch (e) {
       if (e instanceof DOMException && e.name === 'AbortError') {
         setMessages((m) => [...m, { id: `a${Date.now()}`, role: 'assistant', content: '(stopped)' }]);
@@ -108,6 +121,19 @@ export function Assistant({ open, onClose }: { open: boolean; onClose: () => voi
           >
             {model.family} ▾
           </button>
+          {ttsSupported() && (
+            <button
+              className={cx('btn h-8 w-8 !p-0', voiceOn ? 'text-accent' : 'text-slate-500')}
+              onClick={() => {
+                stopSpeaking();
+                actions.updateSettings({ aiVoiceOn: !voiceOn });
+              }}
+              title={voiceOn ? 'Mute JARVIS' : 'Let JARVIS speak replies aloud'}
+              aria-label={voiceOn ? 'Disable voice' : 'Enable voice'}
+            >
+              {voiceOn ? '🔊' : '🔇'}
+            </button>
+          )}
           <button className="btn h-8 w-8 !p-0 text-slate-400" onClick={onClose} aria-label="Close assistant">✕</button>
         </header>
 
