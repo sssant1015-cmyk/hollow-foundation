@@ -1,0 +1,12 @@
+{
+  "appId": "com.hollowfoundation.app",
+  "appName": "Hollow Foundation",
+  "webDir": "dist",
+  "backgroundColor": "#070a10",
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

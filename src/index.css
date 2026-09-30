@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  .theme-dark {
+    --h-bg: #070a10;
+    --h-panel: #0c111b;
+    --h-panel2: #101725;
+    --h-line: #1c2738;
+    --h-accent: #59c2ff;
+    --h-accent-rgb: 89 194 255;
+    --h-accent-dim: #3b93c8;
+  }
+  .theme-midnight {
+    --h-bg: #04060c;
+    --h-panel: #080d18;
+    --h-panel2: #0d1424;
+    --h-line: #16223a;
+    --h-accent: #7aa2ff;
+    --h-accent-rgb: 122 162 255;
+    --h-accent-dim: #5578d6;
+  }
+  .theme-carbon {
+    --h-bg: #0b0b0d;
+    --h-panel: #121215;
+    --h-panel2: #18181c;
+    --h-line: #26262c;
+    --h-accent: #d7de86;
+    --h-accent-rgb: 215 222 134;
+    --h-accent-dim: #b3ba6a;
+  }
+
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-hollow-bg text-slate-200 antialiased;
+    font-feature-settings: 'tnum' 1;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--h-accent) 25%, transparent);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--h-line) transparent;
+  }
+  input,
+  textarea,
+  select {
+    color-scheme: dark;
+  }
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--h-accent) 35%, transparent);
+    border-radius: 0.5rem;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-xl border border-hollow-line bg-hollow-panel;
+  }
+  .field {
+    @apply w-full rounded-lg border border-hollow-line bg-[#0a0f18] px-3 py-2 text-sm text-slate-200 placeholder-slate-500;
+  }
+  .field:focus {
+    border-color: color-mix(in srgb, var(--h-accent) 60%, transparent);
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-hollow-line bg-hollow-panel2 px-3 py-2 text-sm font-medium text-slate-200 transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn:hover {
+    border-color: color-mix(in srgb, var(--h-accent) 50%, transparent);
+  }
+  .btn-primary {
+    border-color: color-mix(in srgb, var(--h-accent) 40%, transparent);
+    background: color-mix(in srgb, var(--h-accent) 15%, transparent);
+    color: var(--h-accent);
+  }
+  .btn-primary:hover {
+    background: color-mix(in srgb, var(--h-accent) 25%, transparent);
+  }
+  .btn-danger {
+    @apply border-bad/30 bg-bad/10 text-bad hover:bg-bad/20;
+  }
+  .label {
+    @apply mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500;
+  }
+}
