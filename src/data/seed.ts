@@ -48,9 +48,6 @@ export function seedProjects(): Project[] {
       nextAction: 'Daily use: plan tasks, log execution, complete reviews',
       notes: 'Phase One scope: tasks, projects, winter arc, money, fitness, learning, habits, reviews, calendar, search.',
     },
-    { id: 'p-nix', name: 'Nix', description: 'Tracked for Phase 2 (Oct 15 – Nov 7). No functionality yet.', ...base },
-    { id: 'p-rafael', name: 'Rafael', description: 'Tracked for Phase 3 (Nov 8 – Nov 21). No functionality yet.', ...base },
-    { id: 'p-hollow-tech', name: 'Hollow Tech', description: 'Tracked for Phase 4 (Nov 22 – Dec 5). No functionality yet.', ...base },
   ];
 }
 

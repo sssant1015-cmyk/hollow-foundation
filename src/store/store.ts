@@ -14,7 +14,10 @@ import type {
 import { emptyState, STORAGE_KEY, STATE_VERSION } from '../data/seed';
 import { nowISO, todayKey } from '../lib/dates';
 
-// ─── Persistence ──────────────────────────────────────────────────────────────
+// ─── Persistence ────────────────────────────────────────────────────────────
+
+// Placeholder projects seeded before v0.1.1 — purged from already-saved state on load.
+const PLACEHOLDER_PROJECT_IDS = new Set(['p-nix', 'p-rafael', 'p-hollow-tech']);
 
 function load(): AppState {
   try {
@@ -28,6 +31,8 @@ function load(): AppState {
       ...parsed,
       settings: { ...base.settings, ...parsed.settings },
       savings: { ...base.savings, ...parsed.savings },
+      // Purge the pre-v0.1.1 placeholder projects from already-saved state.
+      projects: (parsed.projects ?? []).filter((p) => !PLACEHOLDER_PROJECT_IDS.has(p.id)),
     };
   } catch {
     return emptyState();
